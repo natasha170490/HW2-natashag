@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1536903029540.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2507101530",
+    "id" : "92DC2955",
+    "lastKnownWriteTime" : 1536941396,
+    "last_content_update" : 1536941396376,
+    "path" : "~/GitHub/HW2/HW2-natashag.R",
+    "project_path" : "HW2-natashag.R",
+    "properties" : {
+        "cursorPosition" : "88,92",
+        "scrollLine" : "77",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

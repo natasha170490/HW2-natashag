@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1536933573250.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A1F34844",
+    "lastKnownWriteTime" : 32932881520394345,
+    "last_content_update" : 1536933573250,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "8FC573C8",
+        "caption" : "migrants",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=migrants&cache_key=8FC573C8",
+        "displayedObservations" : 4159,
+        "environment" : "",
+        "object" : "migrants",
+        "preview" : 0,
+        "totalObservations" : 4159,
+        "variables" : 13
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
