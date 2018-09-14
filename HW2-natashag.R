@@ -16,7 +16,7 @@ ui <- fluidPage(
     column(4,
            wellPanel(
              #Month Selection
-             selectInput("month_select",
+             selectInput("month_Select",
                          "month:",
                          choices = levels(migrants$Reported.Month),
                          multiple = TRUE,
@@ -29,7 +29,11 @@ ui <- fluidPage(
                          max = max(migrants$Reported.Year, na.rm = T),
                          value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)),
                          step = 1),
-             
+             #Cause of Death Selection
+             selectInput("cause_Select", h3("Select Cause of Death"),
+                         choices= levels(migrants$Cause.of.Death),
+                         selected=1),
+            #Reset Button
              actionButton("reset", "Reset Filters", icon = icon("refresh"))
            )
            )       
@@ -45,34 +49,38 @@ ui <- fluidPage(
     ),
   fluidRow(
     DT::dataTableOutput("table")
-  )
+  ),
+  downloadButton("downloadData", "Download Migrants Deaths Data")
 )
 
 # Define server logic
 server <- function(input, output, session = session) {
   # Filtered Starwars data
-  swInput <- reactive({
+  migrantsInput <- reactive({
     migrants <- migrants %>%
       # Slider Filter
       filter(Reported.Year >= input$yearSelect[1] & Reported.Year <= input$yearSelect[2])
-    # Homeworld Filter
+    # Month Filter
     if (length(input$month_Select) > 0 ) {
       migrants <- subset(migrants, Reported.Month %in% input$month_Select)
     }
-    
     return(migrants)
+    #Cause of Death Filter
+    if (length(input$cause_Select) > 0 ) {
+      migrants <- subset(migrants,  Cause.of.Death %in% input$cause_Select)
+     }
+    return(migrants)
+    
   })
   # Point plot showing Mass, Height and Species
   output$plot1 <- renderPlotly({
-    migrants <- swInput()
+    migrants <- migrantsInput()
     ggplotly(
       ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
-        geom_point() +
-        guides(color = FALSE)
-      , tooltip = "text")
+        geom_bar(stat="identity"))
   })
   output$plot2 <- renderPlotly({
-    migrants<- swInput()
+    migrants<- migrantsInput()
     ggplotly(
       ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
         geom_line() +
@@ -80,7 +88,7 @@ server <- function(input, output, session = session) {
       , tooltip = "text")
   })
   output$plot3 <- renderPlotly({
-    migrants <- swInput()
+    migrants <- migrantsInput()
     ggplotly(
       ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
         geom_histogram() +
@@ -89,17 +97,8 @@ server <- function(input, output, session = session) {
   })
   # Data Table
   output$table <- DT::renderDataTable({
-    migrants <- swInput()
-    
+    migrants <- migrantsInput()
     subset(migrants, select = c(Region, Reported.Date, Number.Dead, Total.Dead.and.Missing, Number.of.Females, Number.of.Males, Cause.of.Death))
-  })
-  # Updating the URL Bar
-  observe({
-    print(reactiveValuesToList(input))
-    session$doBookmark()
-  })
-  onBookmarked(function(url) {
-    updateQueryString(url)
   })
   # Download data in the datatable
   output$downloadData <- downloadHandler(
@@ -112,11 +111,12 @@ server <- function(input, output, session = session) {
   )
   # Reset Filter Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "month_Select", selected = c("Jan"))
+    updateSelectInput(session, "month_Select", selected = c(""))
     updateSliderInput(session, "YearSelect", value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)))
+    updateSelectInput(session,"Select_Cause", selected =c (""))
     showNotification("You have successfully reset the filters", type = "message")
   })
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server, enableBookmarking = "url")
+shinyApp(ui = ui, server = server)
