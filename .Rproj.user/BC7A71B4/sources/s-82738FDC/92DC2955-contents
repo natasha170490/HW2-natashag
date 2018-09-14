@@ -11,7 +11,7 @@ migrants<-read.csv("migrants.csv")
 #I will use a FluidPage instead of navbar
 ui <- fluidPage(
   #I will Definde the Title of the app
-  titlePanel("Deaths of Migrants in the US-MEXICO border"),
+  titlePanel("Deaths of Migrants around the World"),
   fluidRow(
     column(4,
            wellPanel(
@@ -21,7 +21,7 @@ ui <- fluidPage(
                          choices = levels(migrants$Reported.Month),
                          multiple = TRUE,
                          selectize = TRUE,
-                         selected = c("Jan", "Feb", "Mar", "Apr", "May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")),
+                         selected = c("Jan")),
              # Year Selection
              sliderInput("yearSelect",
                          "Year:",
@@ -29,17 +29,18 @@ ui <- fluidPage(
                          max = max(migrants$Reported.Year, na.rm = T),
                          value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)),
                          step = 1),
+             
              actionButton("reset", "Reset Filters", icon = icon("refresh"))
            )
            )       
     ),
-    column(8,
+    column(12,
            plotlyOutput("plot1")
     ),
-    column(8,
+    column(12,
            plotlyOutput("plot2")
     ),
-    column(8,
+    column(12,
            plotlyOutput("plot3")
     ),
   fluidRow(
@@ -55,22 +56,17 @@ server <- function(input, output, session = session) {
       # Slider Filter
       filter(Reported.Year >= input$yearSelect[1] & Reported.Year <= input$yearSelect[2])
     # Homeworld Filter
-    if (length(input$monthSelect) > 0 ) {
-      migrants <- subset(migrants, Reported.Month %in% input$monthSelect)
+    if (length(input$month_Select) > 0 ) {
+      migrants <- subset(migrants, Reported.Month %in% input$month_Select)
     }
     
     return(migrants)
   })
-  # Reactive melted data
- # mwInput <- reactive({
-  #  swInput() %>%
-     # melt(id = "name")
-  #})
   # Point plot showing Mass, Height and Species
   output$plot1 <- renderPlotly({
     migrants <- swInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, color = Cause.of.Death)) + 
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
         geom_point() +
         guides(color = FALSE)
       , tooltip = "text")
@@ -78,7 +74,7 @@ server <- function(input, output, session = session) {
   output$plot2 <- renderPlotly({
     migrants<- swInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, color = Cause.of.Death)) + 
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
         geom_line() +
         guides(color = FALSE)
       , tooltip = "text")
@@ -86,7 +82,7 @@ server <- function(input, output, session = session) {
   output$plot3 <- renderPlotly({
     migrants <- swInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, color = Cause.of.Death)) + 
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
         geom_histogram() +
         guides(color = FALSE)
       , tooltip = "text")
@@ -108,15 +104,15 @@ server <- function(input, output, session = session) {
   # Download data in the datatable
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste("migrants-", Sys.Date(), ".csv", sep="")
+      paste("migrants",Sys.Date(),".csv", sep="")
     },
     content = function(file) {
-      write.csv(swInput(), file)
+      write.csv(migrantsInputs(), file)
     }
   )
   # Reset Filter Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "monthSelect", selected = c("Jan", "Feb"))
+    updateSelectInput(session, "month_Select", selected = c("Jan"))
     updateSliderInput(session, "YearSelect", value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)))
     showNotification("You have successfully reset the filters", type = "message")
   })
