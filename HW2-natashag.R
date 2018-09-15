@@ -49,7 +49,7 @@ ui <- fluidPage(
     ),
   fluidRow(
     DT::dataTableOutput("table"),
-    downloadButton("downloadData", "Download Migrants Deaths Data")
+      downloadButton("downloadData", "Download Migrants Deaths Data")
   )
 )
 
@@ -64,34 +64,32 @@ server <- function(input, output, session = session) {
     if (length(input$month_Select) > 0 | length(input$cause_Select) > 0 ) {
       migrants <- subset(migrants, Reported.Month %in% input$month_Select)
       migrants<- subset(migrants, Cause.of.Death %in% input$cause_Select)
+      migrants2 <<- migrants
       return(migrants)
       }
-    
-    #Cause of Death Filter
-    #if (length(input$cause_Select) > 0 ) {
-    #   migrants<- subset(migrants, Cause.of.Death %in% input$cause_Select)
-    #   return(migrants)
-    #   }
-    
   })
-  # Point plot showing Mass, Height and Species
+  # Bar plot showing Number of Deads per Year
   output$plot1 <- renderPlotly({
     migrants <- migrantsInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, fill= Region)) + 
-        geom_bar(stat="identity"))
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
+        geom_bar(stat="identity")+
+        labs(x="Year", y= "Number of Deads", title="Number of Deads per Year"))
   })
+  # Point plot showing Number of Deads per Region
   output$plot2 <- renderPlotly({
     migrants<- migrantsInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Minimum.Estimated.Number.of.Missing,fill=Region)) + 
-        geom_bar(stat="identity"))
+      ggplot(data = migrants, aes(x = Region, y = Number.Dead)) + 
+        geom_point()+
+        labs(x="Region",y="Number of Deads", title="Number of Deads per Region"))
   })
   output$plot3 <- renderPlotly({
     migrants <- migrantsInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
-        geom_histogram())
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, fill=Region)) + 
+        geom_histogram(stat="identity")+
+        labs(x="Year", y="Number of Deads",title="Number of Dead per Year and Region"))
   })
   # Data Table
   output$table <- DT::renderDataTable({
