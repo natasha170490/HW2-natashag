@@ -5,7 +5,7 @@ library(plotly)
 library(shinythemes)
 library(stringr)
 
-migrants<-read.csv("migrants.csv")
+migrants<-read.csv("migrants2.csv")
 
 #Defining the UI for application 
 #I will use a FluidPage instead of navbar
@@ -21,7 +21,7 @@ ui <- fluidPage(
                          choices = levels(migrants$Reported.Month),
                          multiple = TRUE,
                          selectize = TRUE,
-                         selected = c("Jan")),
+                         selected = c("")),
              # Year Selection
              sliderInput("yearSelect",
                          "Year:",
@@ -30,9 +30,9 @@ ui <- fluidPage(
                          value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)),
                          step = 1),
              #Cause of Death Selection
-             selectInput("cause_Select", h3("Select Cause of Death"),
+             selectInput("cause_Select", h3("Select Cause"),
                          choices= levels(migrants$Cause.of.Death),
-                         selected=1),
+                         selected=0),
             #Reset Button
              actionButton("reset", "Reset Filters", icon = icon("refresh"))
            )
@@ -48,9 +48,9 @@ ui <- fluidPage(
            plotlyOutput("plot3")
     ),
   fluidRow(
-    DT::dataTableOutput("table")
-  ),
-  downloadButton("downloadData", "Download Migrants Deaths Data")
+    DT::dataTableOutput("table"),
+    downloadButton("downloadData", "Download Migrants Deaths Data")
+  )
 )
 
 # Define server logic
@@ -58,42 +58,40 @@ server <- function(input, output, session = session) {
   # Filtered Starwars data
   migrantsInput <- reactive({
     migrants <- migrants %>%
-      # Slider Filter
+     # Slider Filter
       filter(Reported.Year >= input$yearSelect[1] & Reported.Year <= input$yearSelect[2])
-    # Month Filter
-    if (length(input$month_Select) > 0 ) {
+    # Month and Cause of Dead Filter
+    if (length(input$month_Select) > 0 | length(input$cause_Select) > 0 ) {
       migrants <- subset(migrants, Reported.Month %in% input$month_Select)
-    }
-    return(migrants)
+      migrants<- subset(migrants, Cause.of.Death %in% input$cause_Select)
+      return(migrants)
+      }
+    
     #Cause of Death Filter
-    if (length(input$cause_Select) > 0 ) {
-      migrants <- subset(migrants,  Cause.of.Death %in% input$cause_Select)
-     }
-    return(migrants)
+    #if (length(input$cause_Select) > 0 ) {
+    #   migrants<- subset(migrants, Cause.of.Death %in% input$cause_Select)
+    #   return(migrants)
+    #   }
     
   })
   # Point plot showing Mass, Height and Species
   output$plot1 <- renderPlotly({
     migrants <- migrantsInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
+      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead, fill= Region)) + 
         geom_bar(stat="identity"))
   })
   output$plot2 <- renderPlotly({
     migrants<- migrantsInput()
     ggplotly(
-      ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
-        geom_line() +
-        guides(color = FALSE)
-      , tooltip = "text")
+      ggplot(data = migrants, aes(x = Reported.Year, y = Minimum.Estimated.Number.of.Missing,fill=Region)) + 
+        geom_bar(stat="identity"))
   })
   output$plot3 <- renderPlotly({
     migrants <- migrantsInput()
     ggplotly(
       ggplot(data = migrants, aes(x = Reported.Year, y = Number.Dead)) + 
-        geom_histogram() +
-        guides(color = FALSE)
-      , tooltip = "text")
+        geom_histogram())
   })
   # Data Table
   output$table <- DT::renderDataTable({
@@ -106,14 +104,14 @@ server <- function(input, output, session = session) {
       paste("migrants",Sys.Date(),".csv", sep="")
     },
     content = function(file) {
-      write.csv(migrantsInputs(), file)
+      write.csv(migrantsInput(), file)
     }
   )
   # Reset Filter Data
   observeEvent(input$reset, {
     updateSelectInput(session, "month_Select", selected = c(""))
     updateSliderInput(session, "YearSelect", value = c(min(migrants$Reported.Year, na.rm = T), max(migrants$Reported.Year, na.rm = T)))
-    updateSelectInput(session,"Select_Cause", selected =c (""))
+    updateSelectInput(session,"cause_Select", selected =c (""))
     showNotification("You have successfully reset the filters", type = "message")
   })
 }
